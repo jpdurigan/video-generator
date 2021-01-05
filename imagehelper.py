@@ -43,11 +43,32 @@ def query_yes_no(question, default="yes"):
                              "(or 'y' or 'n').\n")
 
 
+def getCollectionName(original_path):
+    _tail, name = ntpath.split(original_path)
+    name = name.split(".")[0]
+    return name
+
+
+def getCollectionFolder(name):
+    return INPUT_FOLDER + name + "\\"
+
+
+def saveCollection(collection):
+    json_path = collection["folder"] + "collection.json"
+    with open(json_path, 'w') as fp:
+        json.dump(collection, fp)
+
+
+def loadCollection(name):
+    collection = {}
+    json_path = getCollectionFolder(name) + "collection.json"
+    with open(json_path, 'r') as fp:
+        collection = json.load(fp)
+    return collection
 
 
 def cropCollection(original_path, resolution):
-    _tail, name = ntpath.split(original_path)
-    name = name.split(".")[0]
+    name = getCollectionName(original_path)
 
     original_img = cv2.imread(original_path)
     if original_img.shape[0] % resolution != 0 or \
@@ -58,7 +79,7 @@ def cropCollection(original_path, resolution):
         return {}
     
 
-    folder = INPUT_FOLDER + name + "\\"
+    folder = getCollectionFolder(name)
     if not os.path.exists(folder):
         print("Creating folder for collection {}".format(name))
         os.makedirs(folder)
@@ -104,7 +125,8 @@ def cropCollection(original_path, resolution):
         "folder": folder,
         "size": size,
         "resolution": resolution,
-
     }
+
+    saveCollection(collection)
 
     return collection
