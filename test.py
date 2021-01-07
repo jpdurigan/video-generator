@@ -23,7 +23,8 @@ def createVideoFrom(collection_name, n=100, starting_frame=None):
         starting_frame = ih.drawRandomFromCollection(collection)
         print("Selected {} as starting point".format(starting_frame))
 
-    collection = ih.compareFrameTo(starting_frame, collection)
+    if collection.get("simmilarity").get(starting_frame) is None:
+        collection = ih.compareFrameTo(starting_frame, collection)
 
     i = n
     selection = []
@@ -44,6 +45,11 @@ def createVideoFrom(collection_name, n=100, starting_frame=None):
         i -= 1
     print("{} frames selected!".format(n))
 
+    print("""
+Selection:
+{}
+        """.format(selection))
+    input("...")
     collection = ih.compareSelection(selection, collection)
 
     i = n
@@ -54,15 +60,21 @@ def createVideoFrom(collection_name, n=100, starting_frame=None):
         max_result = 0
         owner = ""
 
-        for frame in database:
+        for frame in selection:
             if simmilarity[reference][frame] > max_result:
                 max_result = simmilarity[reference][frame]
                 owner = frame
 
         video.append(owner)
+        selection.remove(owner)
         reference = owner
         i -= 1
     print("Video done!")
+    print("""
+Video:
+{}
+        """.format(video))
+    input("...")
 
     ih.saveVideo(video, collection)
 

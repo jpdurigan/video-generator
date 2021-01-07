@@ -134,6 +134,12 @@ def cropCollection(original_path, resolution):
 
 
 def compareFrameTo(frame, collection, selection=[]):
+#     print("""
+# Comparing: {}
+# of collection: {}
+# to selection: {}
+#     """.format(frame, collection["name"], selection))
+#     input("")
     if collection.get("simmilarity") is None:
         collection["simmilarity"] = {}
     simmilarity = collection.get("simmilarity")
@@ -159,9 +165,9 @@ def compareFrameTo(frame, collection, selection=[]):
         simmilarity[frame][comparison] = result
 
         n += 1
-        sys.stdout.write("\rCropped {} / {}.".format(n, len(images)))
+        sys.stdout.write("\rCompared {} / {}.".format(n, len(images)))
         sys.stdout.flush()
-    print("All comparisons done for {}" % [frame])
+    print("All comparisons done for {}".format(frame))
 
     saveCollection(collection)
     return collection
@@ -196,5 +202,6 @@ def saveVideo(video, collection):
     for i in range(len(video)):
         img = cv2.imread(video[i])
         filename = folder + "frame{:05d}.png".format(i)
+        print("Saving {} : {}".format(filename, video[i]))
         cv2.imwrite(filename, img)
     print("Video created!")
