@@ -146,8 +146,14 @@ def compare_frame_to(frame, collection, selection=[]):
     n = 0
     img1 = cv2.imread(frame)
     for comparison in images:
-        img2 = cv2.imread(comparison)
-        result = ssim(img1, img2, multichannel=True)
+        if frame in comparion:
+            result = 1.0
+        elif simmilarity.get(comparison) is not None and \
+                simmilarity[comparison].get(frame) is not None:
+            result = simmilarity[comparison][frame]
+        else:
+            img2 = cv2.imread(comparison)
+            result = ssim(img1, img2, multichannel=True)
         simmilarity[frame][comparison] = result
 
         n += 1
