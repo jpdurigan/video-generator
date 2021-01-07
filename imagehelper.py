@@ -4,10 +4,12 @@ import json
 import ntpath
 import os
 import sys
+import random
 from skimage.metrics import structural_similarity as ssim
 
 
 INPUT_FOLDER = ".\\input\\"
+OUTPUT_FOLDER = ".\\output\\"
 
 
 def query_yes_no(question, default="yes"):
@@ -131,10 +133,10 @@ def cropCollection(original_path, resolution):
     return collection
 
 
-def compare_frame_to(frame, collection, selection=[]):
-    simmilarity = collection.get("simmilarity")
-    if simmilarity is None:
+def compareFrameTo(frame, collection, selection=[]):
+    if collection.get("simmilarity") is None:
         collection["simmilarity"] = {}
+    simmilarity = collection.get("simmilarity")
     if simmilarity.get(frame) is None:
         collection["simmilarity"][frame] = {}
 
@@ -146,7 +148,7 @@ def compare_frame_to(frame, collection, selection=[]):
     n = 0
     img1 = cv2.imread(frame)
     for comparison in images:
-        if frame in comparion:
+        if frame in comparison:
             result = 1.0
         elif simmilarity.get(comparison) is not None and \
                 simmilarity[comparison].get(frame) is not None:
@@ -165,13 +167,34 @@ def compare_frame_to(frame, collection, selection=[]):
     return collection
 
 
-def compare_selection(selection, collection):
+def compareSelection(selection, collection):
     n = 0
     for frame in selection:
-        compare_frame_to(frame, collection, selection)
+        compareFrameTo(frame, collection, selection)
 
         n += 1
         print("Simmilarity matrix: {:0.2f} ( {} / {} ).".format(
                                             n / len(selection),
                                             n, len(selection)))
     return collection
+
+
+def drawRandomFromCollection(collection):
+    if collection.get("frames") is None:
+        return {}
+    i = random.randrange(0, len(collection))
+    return collection["frames"][i]
+
+
+def saveVideo(video, collection):
+    folder = OUTPUT_FOLDER + collection["name"] + \
+        "\\{}\\".format(getCollectionName(video[0]))
+    if not os.path.exists(folder):
+        print("Creating folder for video: {}".format(folder))
+        os.makedirs(folder)
+
+    for i in range(len(video)):
+        img = cv2.imread(video[i])
+        filename = folder + "frame{:05d}.png".format(i)
+        cv2.imwrite(filename, img)
+    print("Video created!")

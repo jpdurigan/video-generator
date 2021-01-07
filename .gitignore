@@ -1,3 +1,4 @@
 /vidgen_env
 /input/*/
 /.vscode/
+/output/*/
