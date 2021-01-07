@@ -69,15 +69,14 @@ def loadCollection(name):
 
 def cropCollection(original_path, resolution):
     name = getCollectionName(original_path)
-
     original_img = cv2.imread(original_path)
+
     if original_img.shape[0] % resolution != 0 or \
-                original_img.shape[1] % resolution != 0:
+            original_img.shape[1] % resolution != 0:
         print("Image {} can't be divided in {}x{} squares!".format(
             name, resolution, resolution
         ))
         return {}
-    
 
     folder = getCollectionFolder(name)
     if not os.path.exists(folder):
@@ -93,40 +92,80 @@ def cropCollection(original_path, resolution):
                 i += 1
                 try_name = name + "_%02d" % i
                 try_folder = INPUT_FOLDER + try_name + "\\"
-            
             print("Creating folder for collection {}".format(try_name))
             os.makedirs(try_folder)
             name, folder = try_name, try_folder
-    
 
+    frames = []
     x, y, n = 0, 0, 0
-    size = int((original_img.shape[0] / resolution) * (original_img.shape[1] / resolution))
+    size = int(
+        (original_img.shape[0] / resolution) *
+        (original_img.shape[1] / resolution))
     while x * resolution < original_img.shape[0]:
         y = 0
         while y * resolution < original_img.shape[1]:
             x1, y1 = x * resolution, y * resolution
             x2, y2 = x1 + resolution, y1 + resolution
-            crop = original_img[x1 : x2, y1 : y2]
+            crop = original_img[x1: x2, y1: y2]
 
             filename = folder + "crop_{}x_{}y.png".format(x, y)
             cv2.imwrite(filename, crop)
+            frames.append(filename)
 
             y += 1
             n += 1
             sys.stdout.write("\rCropped {} / {}.".format(n, size))
             sys.stdout.flush()
         x += 1
-    
     print("All images cropped!")
-
 
     collection = {
         "name": name,
         "folder": folder,
         "size": size,
         "resolution": resolution,
+        "frames": frames,
     }
 
     saveCollection(collection)
+    return collection
 
+
+def compare_frame_to(frame, collection, selection=[]):
+    simmilarity = collection.get("simmilarity")
+    if simmilarity is None:
+        collection["simmilarity"] = {}
+    if simmilarity.get(frame) is None:
+        collection["simmilarity"][frame] = {}
+
+    if len(selection) > 0:
+        images = selection
+    else:
+        images = collection["frames"]
+
+    n = 0
+    img1 = cv2.imread(frame)
+    for comparison in images:
+        img2 = cv2.imread(comparison)
+        result = ssim(img1, img2, multichannel=True)
+        simmilarity[frame][comparison] = result
+
+        n += 1
+        sys.stdout.write("\rCropped {} / {}.".format(n, len(images)))
+        sys.stdout.flush()
+    print("All comparisons done for {}" % [frame])
+
+    saveCollection(collection)
+    return collection
+
+
+def compare_selection(selection, collection):
+    n = 0
+    for frame in selection:
+        compare_frame_to(frame, collection, selection)
+
+        n += 1
+        print("Simmilarity matrix: {:0.2f} ( {} / {} ).".format(
+                                            n / len(selection),
+                                            n, len(selection)))
     return collection
